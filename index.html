@@ -1,1851 +1,858 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awais AI — Voice Assistant</title>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg: #050b18;
-            --panel: #0a1428;
-            --panel2: #0d1a32;
-            --border: rgba(120, 160, 220, 0.16);
-            --text: #f5f7ff;
-            --muted: #9aa8c3;
-            --blue: #3287ff;
-            --cyan: #19d7ff;
-            --purple: #8b4dff;
-            --green: #2ee77b;
-        }
-
-        body {
-            font-family: Inter, Arial, sans-serif;
-            background:
-                radial-gradient(circle at 70% 10%, rgba(67, 90, 255, .10), transparent 30%),
-                radial-gradient(circle at 50% 70%, rgba(0, 180, 255, .06), transparent 35%),
-                var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        button,
-        input {
-            font: inherit;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        /* ================= SIDEBAR ================= */
-
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 325px;
-            padding: 35px 25px;
-            background: rgba(5, 13, 29, .88);
-            border-right: 1px solid var(--border);
-            backdrop-filter: blur(25px);
-            z-index: 10;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 55px;
-        }
-
-        .brand-logo {
-            width: 58px;
-            height: 58px;
-            border-radius: 17px;
-            display: grid;
-            place-items: center;
-            font-size: 30px;
-            background: linear-gradient(135deg, #2196ff, #8c4dff);
-            box-shadow: 0 0 35px rgba(74, 108, 255, .35);
-        }
-
-        .brand h1 {
-            font-size: 25px;
-            letter-spacing: -.7px;
-        }
-
-        .brand h1 span {
-            color: #4d9bff;
-        }
-
-        .brand p {
-            margin-top: 4px;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .nav {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .nav-item {
-            border: none;
-            background: transparent;
-            color: #b6c2d9;
-            padding: 17px 20px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            gap: 17px;
-            font-size: 17px;
-            text-align: left;
-            transition: .25s;
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            background: linear-gradient(
-                90deg,
-                rgba(54, 113, 220, .27),
-                rgba(40, 73, 145, .16)
-            );
-            color: white;
-        }
-
-        .nav-icon {
-            width: 25px;
-            text-align: center;
-            font-size: 21px;
-        }
-
-        .sidebar-bottom {
-            position: absolute;
-            bottom: 30px;
-            left: 25px;
-            right: 25px;
-        }
-
-        .tagline {
-            color: #9eabc3;
-            font-size: 14px;
-            line-height: 1.7;
-            font-style: italic;
-            margin-bottom: 25px;
-        }
-
-        .online {
-            border-top: 1px solid var(--border);
-            padding-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            color: #9caac1;
-            font-size: 13px;
-        }
-
-        .online-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .online-dot {
-            width: 10px;
-            height: 10px;
-            background: var(--green);
-            border-radius: 50%;
-            box-shadow: 0 0 12px rgba(46, 231, 123, .7);
-        }
-
-        /* ================= MAIN ================= */
-
-        .main {
-            margin-left: 325px;
-            padding: 32px 38px;
-            min-height: 100vh;
-        }
-
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 28px;
-        }
-
-        .greeting h2 {
-            font-size: 37px;
-            letter-spacing: -1px;
-        }
-
-        .greeting p {
-            color: var(--muted);
-            margin-top: 8px;
-            font-size: 16px;
-        }
-
-        .top-actions {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-
-        .connection {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 12px 18px;
-            border: 1px solid rgba(46, 231, 123, .22);
-            border-radius: 30px;
-            background: rgba(46, 231, 123, .06);
-            color: #d4ffe4;
-            font-size: 14px;
-        }
-
-        .connection-dot {
-            width: 9px;
-            height: 9px;
-            background: var(--green);
-            border-radius: 50%;
-        }
-
-        .profile {
-            width: 47px;
-            height: 47px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            background: #263755;
-            display: grid;
-            place-items: center;
-            font-size: 21px;
-        }
-
-        /* ================= DASHBOARD ================= */
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: minmax(500px, 1fr) 345px;
-            gap: 25px;
-        }
-
-        .main-card {
-            min-height: 790px;
-            border: 1px solid var(--border);
-            border-radius: 22px;
-            background: linear-gradient(
-                145deg,
-                rgba(12, 26, 51, .95),
-                rgba(5, 15, 32, .92)
-            );
-            box-shadow: 0 20px 80px rgba(0,0,0,.2);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ================= LISTENING ================= */
-
-        .listen-area {
-            height: 420px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .listen-title {
-            position: absolute;
-            top: 32px;
-            left: 35px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .small-mic {
-            width: 48px;
-            height: 48px;
-            border-radius: 15px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, #1357d7, #2751a9);
-            font-size: 23px;
-        }
-
-        .listen-title h3 {
-            font-size: 21px;
-        }
-
-        .listen-title p {
-            color: var(--muted);
-            margin-top: 4px;
-            font-size: 14px;
-        }
-
-        .mic-wrapper {
-            position: relative;
-            width: 210px;
-            height: 210px;
-            display: grid;
-            place-items: center;
-        }
-
-        .mic-ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 1px solid rgba(49, 142, 255, .25);
-        }
-
-        .ring-1 {
-            width: 210px;
-            height: 210px;
-        }
-
-        .ring-2 {
-            width: 175px;
-            height: 175px;
-        }
-
-        .ring-3 {
-            width: 145px;
-            height: 145px;
-        }
-
-        .mic-button {
-            position: relative;
-            z-index: 2;
-            width: 115px;
-            height: 115px;
-            border-radius: 50%;
-            border: 3px solid #55c8ff;
-            background: linear-gradient(135deg, #1756df, #8c3cf1);
-            color: white;
-            font-size: 42px;
-            box-shadow:
-                0 0 25px rgba(54, 141, 255, .65),
-                0 0 70px rgba(117, 53, 255, .25);
-            transition: .25s;
-        }
-
-        .mic-button:hover {
-            transform: scale(1.06);
-        }
-
-        .mic-button.listening {
-            animation: micPulse 1.2s infinite;
-        }
-
-        @keyframes micPulse {
-            0%, 100% {
-                box-shadow:
-                    0 0 25px rgba(54, 141, 255, .7),
-                    0 0 60px rgba(117, 53, 255, .25);
-            }
-
-            50% {
-                box-shadow:
-                    0 0 40px rgba(54, 141, 255, 1),
-                    0 0 110px rgba(117, 53, 255, .5);
-            }
-        }
-
-        .waveform {
-            margin-top: 35px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .bar {
-            width: 4px;
-            height: 15px;
-            border-radius: 10px;
-            background: linear-gradient(#28caff, #8a4dff);
-            animation: wave 1s ease-in-out infinite alternate;
-            animation-play-state: paused;
-        }
-
-        .waveform.active .bar {
-            animation-play-state: running;
-        }
-
-        .bar:nth-child(1) { animation-delay: .1s; }
-        .bar:nth-child(2) { animation-delay: .3s; }
-        .bar:nth-child(3) { animation-delay: .2s; }
-        .bar:nth-child(4) { animation-delay: .4s; }
-        .bar:nth-child(5) { animation-delay: .1s; }
-        .bar:nth-child(6) { animation-delay: .5s; }
-        .bar:nth-child(7) { animation-delay: .2s; }
-        .bar:nth-child(8) { animation-delay: .3s; }
-        .bar:nth-child(9) { animation-delay: .1s; }
-        .bar:nth-child(10) { animation-delay: .4s; }
-        .bar:nth-child(11) { animation-delay: .2s; }
-        .bar:nth-child(12) { animation-delay: .5s; }
-        .bar:nth-child(13) { animation-delay: .1s; }
-        .bar:nth-child(14) { animation-delay: .3s; }
-        .bar:nth-child(15) { animation-delay: .2s; }
-
-        @keyframes wave {
-            from { height: 8px; }
-            to { height: 42px; }
-        }
-
-        /* ================= CHAT ================= */
-
-        .chat {
-            flex: 1;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-
-        .message {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            max-width: 85%;
-            animation: messageIn .3s ease;
-        }
-
-        @keyframes messageIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            margin-left: auto;
-            flex-direction: row-reverse;
-        }
-
-        .avatar {
-            flex-shrink: 0;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            background: #172846;
-            border: 1px solid var(--border);
-        }
-
-        .message.user .avatar {
-            background: #2556aa;
-        }
-
-        .bubble {
-            padding: 13px 17px;
-            border-radius: 16px;
-            background: #182944;
-            color: #e8efff;
-            line-height: 1.5;
-            font-size: 14px;
-        }
-
-        .message.user .bubble {
-            background: linear-gradient(135deg, #1553ae, #243e83);
-        }
-
-        .message-time {
-            display: block;
-            font-size: 10px;
-            color: #8594af;
-            text-align: right;
-            margin-top: 6px;
-        }
-
-        /* ================= INPUT ================= */
-
-        .input-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .speak-btn {
-            border: none;
-            min-width: 170px;
-            height: 53px;
-            border-radius: 30px;
-            color: white;
-            background: linear-gradient(90deg, #218dff, #8b4cf4);
-            box-shadow: 0 8px 25px rgba(58, 103, 255, .25);
-            font-weight: 600;
-        }
-
-        .text-input {
-            height: 53px;
-            flex: 1;
-            border-radius: 30px;
-            border: 1px solid var(--border);
-            outline: none;
-            padding: 0 20px;
-            color: white;
-            background: #09162d;
-        }
-
-        .text-input::placeholder {
-            color: #71809c;
-        }
-
-        .send-btn {
-            width: 53px;
-            height: 53px;
-            border-radius: 50%;
-            border: none;
-            color: white;
-            background: linear-gradient(135deg, #1f8fff, #4e6fff);
-            font-size: 20px;
-        }
-
-        /* ================= RIGHT PANEL ================= */
-
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .feature {
-            padding: 20px;
-            min-height: 112px;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background: rgba(10, 25, 48, .82);
-            display: flex;
-            align-items: center;
-            gap: 17px;
-            transition: .25s;
-        }
-
-        .feature:hover {
-            transform: translateY(-2px);
-            border-color: rgba(71, 139, 255, .35);
-            background: #0d1d39;
-        }
-
-        .feature-icon {
-            width: 55px;
-            height: 55px;
-            flex-shrink: 0;
-            border-radius: 15px;
-            display: grid;
-            place-items: center;
-            font-size: 24px;
-            background: linear-gradient(135deg, #6b36db, #244dba);
-        }
-
-        .feature:nth-child(2) .feature-icon {
-            background: linear-gradient(135deg, #18b8cc, #1250bb);
-        }
-
-        .feature:nth-child(3) .feature-icon {
-            background: linear-gradient(135deg, #12c4d2, #1261c5);
-        }
-
-        .feature:nth-child(4) .feature-icon {
-            background: linear-gradient(135deg, #3366e7, #4a38bd);
-        }
-
-        .feature h4 {
-            font-size: 16px;
-        }
-
-        .feature p {
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.5;
-            margin-top: 5px;
-        }
-
-        .arrow {
-            margin-left: auto;
-            color: #7183a1;
-            font-size: 22px;
-        }
-
-        /* ================= QUICK COMMANDS ================= */
-
-        .quick {
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background: rgba(10, 25, 48, .82);
-        }
-
-        .quick h3 {
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-
-        .quick-command {
-            border: 1px solid rgba(100, 140, 200, .12);
-            background: #0c1b35;
-            color: #c8d5ed;
-            width: 100%;
-            padding: 11px 13px;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 12px;
-            transition: .2s;
-        }
-
-        .quick-command:hover {
-            background: #12284a;
-            border-color: rgba(60, 142, 255, .3);
-        }
-
-        /* ================= MOBILE ================= */
-
-        .mobile-menu {
-            display: none;
-        }
-
-        @media (max-width: 1150px) {
-            .sidebar {
-                width: 240px;
-            }
-
-            .main {
-                margin-left: 240px;
-            }
-
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-
-            .right-panel {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 800px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: .3s;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            .mobile-menu {
-                display: block;
-                width: 45px;
-                height: 45px;
-                border-radius: 12px;
-                border: 1px solid var(--border);
-                background: #0c1b34;
-                color: white;
-                font-size: 22px;
-                margin-bottom: 15px;
-            }
-
-            .topbar {
-                align-items: flex-start;
-            }
-
-            .greeting h2 {
-                font-size: 27px;
-            }
-
-            .connection {
-                display: none;
-            }
-
-            .dashboard {
-                display: block;
-            }
-
-            .main-card {
-                min-height: 700px;
-            }
-
-            .right-panel {
-                display: grid;
-                grid-template-columns: 1fr;
-                margin-top: 18px;
-            }
-
-            .listen-area {
-                height: 360px;
-            }
-
-            .input-area {
-                flex-wrap: wrap;
-            }
-
-            .speak-btn {
-                width: 100%;
-            }
-
-            .text-input {
-                min-width: 0;
-            }
-        }
-
-        @media (max-width: 500px) {
-            .main {
-                padding: 14px;
-            }
-
-            .greeting h2 {
-                font-size: 24px;
-            }
-
-            .greeting p {
-                font-size: 13px;
-            }
-
-            .main-card {
-                border-radius: 17px;
-            }
-
-            .listen-title {
-                left: 20px;
-                top: 20px;
-            }
-
-            .mic-wrapper {
-                transform: scale(.85);
-            }
-
-            .chat {
-                padding: 17px;
-            }
-
-            .bubble {
-                font-size: 13px;
-            }
-
-            .input-area {
-                gap: 8px;
-            }
-
-            .text-input {
-                width: calc(100% - 62px);
-                flex: none;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Awais AI — Voice Assistant</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+    --bg:#050b18;
+    --panel:#0a1428;
+    --panel2:#0d1a32;
+    --border:rgba(120,160,220,.16);
+    --text:#f5f7ff;
+    --muted:#9aa8c3;
+    --blue:#3287ff;
+    --purple:#8b4dff;
+    --green:#2ee77b;
+}
+
+body{
+    font-family:Inter,Arial,sans-serif;
+    background:
+    radial-gradient(circle at 70% 10%,rgba(67,90,255,.10),transparent 30%),
+    radial-gradient(circle at 50% 70%,rgba(0,180,255,.06),transparent 35%),
+    var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+}
+
+button{
+    font:inherit;
+    cursor:pointer;
+}
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:300px;
+    padding:35px 25px;
+    background:rgba(5,13,29,.88);
+    border-right:1px solid var(--border);
+    backdrop-filter:blur(25px);
+    z-index:10;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:55px;
+}
+
+.brand-logo{
+    width:58px;
+    height:58px;
+    border-radius:17px;
+    display:grid;
+    place-items:center;
+    font-size:30px;
+    background:linear-gradient(135deg,#2196ff,#8c4dff);
+    box-shadow:0 0 35px rgba(74,108,255,.35);
+}
+
+.brand h1{
+    font-size:25px;
+}
+
+.brand h1 span{
+    color:#4d9bff;
+}
+
+.brand p{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:14px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.nav-item{
+    border:none;
+    background:transparent;
+    color:#b6c2d9;
+    padding:17px 20px;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    gap:17px;
+    font-size:17px;
+    text-align:left;
+}
+
+.nav-item:hover,
+.nav-item.active{
+    background:linear-gradient(
+        90deg,
+        rgba(54,113,220,.27),
+        rgba(40,73,145,.16)
+    );
+    color:white;
+}
+
+.nav-icon{
+    width:25px;
+    text-align:center;
+    font-size:21px;
+}
+
+.sidebar-bottom{
+    position:absolute;
+    bottom:30px;
+    left:25px;
+    right:25px;
+}
+
+.tagline{
+    color:#9eabc3;
+    font-size:14px;
+    line-height:1.7;
+    font-style:italic;
+    margin-bottom:25px;
+}
+
+.online{
+    border-top:1px solid var(--border);
+    padding-top:20px;
+    display:flex;
+    justify-content:space-between;
+    color:#9caac1;
+    font-size:13px;
+}
+
+.online-status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.online-dot{
+    width:10px;
+    height:10px;
+    background:var(--green);
+    border-radius:50%;
+    box-shadow:0 0 12px rgba(46,231,123,.7);
+}
+
+.main{
+    margin-left:300px;
+    padding:32px 38px;
+    min-height:100vh;
+}
+
+.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:28px;
+}
+
+.greeting h2{
+    font-size:37px;
+}
+
+.greeting p{
+    color:var(--muted);
+    margin-top:8px;
+}
+
+.top-actions{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.connection{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:12px 18px;
+    border:1px solid rgba(46,231,123,.22);
+    border-radius:30px;
+    background:rgba(46,231,123,.06);
+    color:#d4ffe4;
+}
+
+.connection-dot{
+    width:9px;
+    height:9px;
+    background:var(--green);
+    border-radius:50%;
+}
+
+.profile{
+    width:47px;
+    height:47px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:#263755;
+    display:grid;
+    place-items:center;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:minmax(500px,1fr) 345px;
+    gap:25px;
+}
+
+.main-card{
+    min-height:790px;
+    border:1px solid var(--border);
+    border-radius:22px;
+    background:linear-gradient(
+        145deg,
+        rgba(12,26,51,.95),
+        rgba(5,15,32,.92)
+    );
+    box-shadow:0 20px 80px rgba(0,0,0,.2);
+    overflow:hidden;
+}
+
+.listen-area{
+    min-height:560px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-bottom:1px solid var(--border);
+    padding:80px 30px 40px;
+}
+
+.listen-title{
+    position:absolute;
+    top:32px;
+    left:35px;
+    display:flex;
+    gap:15px;
+    align-items:center;
+}
+
+.small-mic{
+    width:48px;
+    height:48px;
+    border-radius:15px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#1357d7,#2751a9);
+    font-size:23px;
+}
+
+.listen-title h3{
+    font-size:21px;
+}
+
+.listen-title p{
+    color:var(--muted);
+    margin-top:4px;
+    font-size:14px;
+}
+
+/* REAL ELEVENLABS WIDGET */
+
+.eleven-wrapper{
+    width:100%;
+    max-width:700px;
+    min-height:390px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.eleven-wrapper elevenlabs-convai{
+    width:100%;
+    display:block;
+}
+
+/* CHAT INFORMATION */
+
+.chat{
+    padding:25px;
+}
+
+.chat-title{
+    color:#aebbd1;
+    font-size:14px;
+    margin-bottom:12px;
+}
+
+.info-box{
+    padding:17px;
+    border:1px solid var(--border);
+    border-radius:15px;
+    background:#09162d;
+    color:#aebbd1;
+    line-height:1.6;
+    font-size:13px;
+}
+
+.right-panel{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.feature{
+    padding:20px;
+    min-height:112px;
+    border:1px solid var(--border);
+    border-radius:18px;
+    background:rgba(10,25,48,.82);
+    display:flex;
+    align-items:center;
+    gap:17px;
+    transition:.25s;
+}
+
+.feature:hover{
+    transform:translateY(-2px);
+    border-color:rgba(71,139,255,.35);
+}
+
+.feature-icon{
+    width:55px;
+    height:55px;
+    flex-shrink:0;
+    border-radius:15px;
+    display:grid;
+    place-items:center;
+    font-size:24px;
+    background:linear-gradient(135deg,#6b36db,#244dba);
+}
+
+.feature:nth-child(2) .feature-icon{
+    background:linear-gradient(135deg,#18b8cc,#1250bb);
+}
+
+.feature:nth-child(3) .feature-icon{
+    background:linear-gradient(135deg,#12c4d2,#1261c5);
+}
+
+.feature:nth-child(4) .feature-icon{
+    background:linear-gradient(135deg,#3366e7,#4a38bd);
+}
+
+.feature h4{
+    font-size:16px;
+}
+
+.feature p{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.5;
+    margin-top:5px;
+}
+
+.arrow{
+    margin-left:auto;
+    color:#7183a1;
+    font-size:22px;
+}
+
+.quick{
+    padding:20px;
+    border:1px solid var(--border);
+    border-radius:18px;
+    background:rgba(10,25,48,.82);
+}
+
+.quick h3{
+    font-size:16px;
+    margin-bottom:15px;
+}
+
+.quick-command{
+    border:1px solid rgba(100,140,200,.12);
+    background:#0c1b35;
+    color:#c8d5ed;
+    width:100%;
+    padding:11px 13px;
+    margin-bottom:8px;
+    border-radius:10px;
+    text-align:left;
+    font-size:12px;
+}
+
+.quick-command:hover{
+    background:#12284a;
+}
+
+.mobile-menu{
+    display:none;
+}
+
+@media(max-width:1150px){
+
+    .sidebar{
+        width:240px;
+    }
+
+    .main{
+        margin-left:240px;
+    }
+
+    .dashboard{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:800px){
+
+    .sidebar{
+        transform:translateX(-100%);
+        transition:.3s;
+    }
+
+    .sidebar.open{
+        transform:translateX(0);
+    }
+
+    .main{
+        margin-left:0;
+        padding:20px;
+    }
+
+    .mobile-menu{
+        display:block;
+        width:45px;
+        height:45px;
+        border-radius:12px;
+        border:1px solid var(--border);
+        background:#0c1b34;
+        color:white;
+        font-size:22px;
+        margin-bottom:15px;
+    }
+
+    .greeting h2{
+        font-size:27px;
+    }
+
+    .connection{
+        display:none;
+    }
+
+    .dashboard{
+        display:block;
+    }
+
+    .right-panel{
+        margin-top:18px;
+    }
+
+    .listen-area{
+        min-height:520px;
+        padding:80px 15px 30px;
+    }
+
+}
+
+@media(max-width:500px){
+
+    .main{
+        padding:14px;
+    }
+
+    .greeting h2{
+        font-size:24px;
+    }
+
+    .top-actions{
+        display:none;
+    }
+
+    .main-card{
+        border-radius:17px;
+    }
+
+    .listen-title{
+        left:20px;
+        top:20px;
+    }
+
+    .listen-title h3{
+        font-size:18px;
+    }
+
+    .eleven-wrapper{
+        min-height:400px;
+    }
+
+}
+</style>
 </head>
 
 <body>
 
-    <!-- ================= SIDEBAR ================= -->
+<!-- SIDEBAR -->
 
-    <aside class="sidebar" id="sidebar">
+<aside class="sidebar" id="sidebar">
 
-        <div class="brand">
-            <div class="brand-logo">🧠</div>
+    <div class="brand">
 
-            <div>
-                <h1>Awais <span>AI</span></h1>
-                <p>Voice Assistant</p>
-            </div>
+        <div class="brand-logo">🧠</div>
+
+        <div>
+            <h1>Awais <span>AI</span></h1>
+            <p>Voice Assistant</p>
         </div>
 
-        <nav class="nav">
+    </div>
 
-            <button class="nav-item active" data-section="home">
-                <span class="nav-icon">⌂</span>
-                Home
-            </button>
+    <nav class="nav">
 
-            <button class="nav-item" data-section="chat">
-                <span class="nav-icon">💬</span>
-                Chat
-            </button>
+        <button class="nav-item active">
+            <span class="nav-icon">⌂</span>
+            Home
+        </button>
 
-            <button class="nav-item" data-section="voice">
-                <span class="nav-icon">🎙</span>
-                Voice Settings
-            </button>
+        <button class="nav-item">
+            <span class="nav-icon">💬</span>
+            Chat
+        </button>
 
-            <button class="nav-item" data-section="history">
-                <span class="nav-icon">↶</span>
-                History
-            </button>
+        <button class="nav-item">
+            <span class="nav-icon">🎙</span>
+            Voice Settings
+        </button>
 
-            <button class="nav-item" data-section="settings">
-                <span class="nav-icon">⚙</span>
-                Settings
-            </button>
+        <button class="nav-item">
+            <span class="nav-icon">↶</span>
+            History
+        </button>
 
-        </nav>
+        <button class="nav-item">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </button>
 
-        <div class="sidebar-bottom">
+    </nav>
 
-            <div class="tagline">
-                “Speak • Get Answers<br>
-                &nbsp;&nbsp;• Be Productive”
+    <div class="sidebar-bottom">
+
+        <div class="tagline">
+            “Speak • Get Answers<br>
+            &nbsp;&nbsp;• Be Productive”
+        </div>
+
+        <div class="online">
+
+            <div class="online-status">
+                <span class="online-dot"></span>
+                Online
             </div>
 
-            <div class="online">
-                <div class="online-status">
-                    <span class="online-dot"></span>
-                    Online
-                </div>
+            <span>v2.0.0</span>
 
-                <span>v1.0.0</span>
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+    <button class="mobile-menu" id="mobileMenu">☰</button>
+
+    <header class="topbar">
+
+        <div class="greeting">
+
+            <h2>Hello Awais 👋</h2>
+
+            <p>
+                Your real AI voice assistant is ready. Just speak!
+            </p>
+
+        </div>
+
+        <div class="top-actions">
+
+            <div class="connection">
+
+                <span class="connection-dot"></span>
+
+                <span>ElevenLabs Connected</span>
+
+            </div>
+
+            <div class="profile">
+                👤
             </div>
 
         </div>
 
-    </aside>
+    </header>
 
 
-    <!-- ================= MAIN ================= -->
+    <section class="dashboard">
 
-    <main class="main">
+        <!-- MAIN CARD -->
 
-        <button class="mobile-menu" id="mobileMenu">☰</button>
+        <div class="main-card">
 
-        <header class="topbar">
+            <div class="listen-area">
 
-            <div class="greeting">
-                <h2>Hello Awais 👋</h2>
-                <p>Your AI voice assistant is ready. Just speak!</p>
-            </div>
+                <div class="listen-title">
 
-            <div class="top-actions">
+                    <div class="small-mic">🎙</div>
 
-                <div class="connection">
-                    <span class="connection-dot"></span>
-                    <span id="connectionText">AI Connected</span>
-                </div>
+                    <div>
 
-                <div class="profile">
-                    👤
-                </div>
+                        <h3>Talk to Awais AI</h3>
 
-            </div>
-
-        </header>
-
-
-        <section class="dashboard">
-
-            <!-- ================= MAIN CARD ================= -->
-
-            <div class="main-card">
-
-                <!-- LISTENING AREA -->
-
-                <div class="listen-area">
-
-                    <div class="listen-title">
-
-                        <div class="small-mic">🎙</div>
-
-                        <div>
-                            <h3 id="statusTitle">Ready</h3>
-                            <p id="statusText">
-                                Press the microphone and speak
-                            </p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="mic-wrapper">
-
-                        <div class="mic-ring ring-1"></div>
-                        <div class="mic-ring ring-2"></div>
-                        <div class="mic-ring ring-3"></div>
-
-                        <button
-                            class="mic-button"
-                            id="micButton"
-                            title="Start voice recognition"
-                        >
-                            🎙
-                        </button>
-
-                    </div>
-
-
-                    <div class="waveform" id="waveform">
-
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
+                        <p>
+                            Powered by ElevenLabs
+                        </p>
 
                     </div>
 
                 </div>
 
 
-                <!-- CHAT -->
+                <!-- REAL ELEVENLABS AGENT -->
 
-                <div class="chat">
+                <div class="eleven-wrapper">
 
-                    <div class="messages" id="messages">
-
-                        <div class="message user">
-
-                            <div class="avatar">👤</div>
-
-                            <div class="bubble">
-                                What is artificial intelligence?
-                                <span class="message-time">
-                                    Just now ✓
-                                </span>
-                            </div>
-
-                        </div>
-
-
-                        <div class="message">
-
-                            <div class="avatar">🧠</div>
-
-                            <div class="bubble">
-                                Artificial intelligence (AI) is the ability
-                                of machines to perform tasks that usually
-                                require human intelligence, such as
-                                learning, reasoning, problem-solving,
-                                and understanding natural language.
-
-                                <span class="message-time">
-                                    AI Assistant
-                                </span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- INPUT -->
-
-                    <div class="input-area">
-
-                        <button
-                            class="speak-btn"
-                            id="speakButton"
-                        >
-                            🎙 &nbsp; Tap to speak
-                        </button>
-
-                        <input
-                            type="text"
-                            class="text-input"
-                            id="textInput"
-                            placeholder="Type your message..."
-                        >
-
-                        <button
-                            class="send-btn"
-                            id="sendButton"
-                        >
-                            ➤
-                        </button>
-
-                    </div>
+                    <elevenlabs-convai
+                        agent-id="agent_0801m3v1qef6p98k9v1btkt4a5"
+                        variant="full"
+                        avatar-orb-color-1="#3287ff"
+                        avatar-orb-color-2="#8b4dff"
+                        action-text="Talk to Awais AI"
+                        start-call-text="Start Conversation"
+                        end-call-text="End Conversation"
+                        listening-text="Listening..."
+                        speaking-text="Awais AI is speaking">
+                    </elevenlabs-convai>
 
                 </div>
 
             </div>
 
 
-            <!-- ================= RIGHT PANEL ================= -->
+            <!-- INFO -->
 
-            <aside class="right-panel">
+            <div class="chat">
 
-                <div class="feature">
+                <div class="chat-title">
+                    ✦ Awais AI Conversation
+                </div>
 
-                    <div class="feature-icon">🎙</div>
+                <div class="info-box">
 
-                    <div>
-                        <h4>Voice Control</h4>
-                        <p>
-                            Speak naturally and get instant responses.
-                        </p>
-                    </div>
+                    🎙 <b>Voice:</b> ElevenLabs<br><br>
 
-                    <span class="arrow">›</span>
+                    🤖 <b>AI Agent:</b> Aakash Institute Voice Agent<br><br>
+
+                    💬 Speak naturally with your AI assistant.
+                    Your conversation is handled by your ElevenLabs agent.
 
                 </div>
 
+            </div>
 
-                <div class="feature">
-
-                    <div class="feature-icon">⚡</div>
-
-                    <div>
-                        <h4>Fast & Smart</h4>
-                        <p>
-                            Powered by advanced AI for accurate answers.
-                        </p>
-                    </div>
-
-                    <span class="arrow">›</span>
-
-                </div>
+        </div>
 
 
-                <div class="feature">
+        <!-- RIGHT PANEL -->
 
-                    <div class="feature-icon">🛡</div>
+        <aside class="right-panel">
 
-                    <div>
-                        <h4>Safe & Private</h4>
-                        <p>
-                            Your data stays with you. Always.
-                        </p>
-                    </div>
+            <div class="feature">
 
-                    <span class="arrow">›</span>
+                <div class="feature-icon">🎙</div>
+
+                <div>
+
+                    <h4>Voice Control</h4>
+
+                    <p>
+                        Speak naturally and get real AI responses.
+                    </p>
 
                 </div>
 
+                <span class="arrow">›</span>
 
-                <div class="feature">
-
-                    <div class="feature-icon">⚙</div>
-
-                    <div>
-                        <h4>Customizable</h4>
-                        <p>
-                            Adjust voice, language, and more.
-                        </p>
-                    </div>
-
-                    <span class="arrow">›</span>
-
-                </div>
+            </div>
 
 
-                <!-- QUICK COMMANDS -->
+            <div class="feature">
 
-                <div class="quick">
+                <div class="feature-icon">⚡</div>
 
-                    <h3>✦ Quick Commands</h3>
+                <div>
 
-                    <button class="quick-command"
-                        data-command="Search for latest news">
-                        🔍 &nbsp; “Search for latest news”
-                    </button>
+                    <h4>Fast & Smart</h4>
 
-                    <button class="quick-command"
-                        data-command="Play a song on YouTube">
-                        ▶️ &nbsp; “Play a song on YouTube”
-                    </button>
-
-                    <button class="quick-command"
-                        data-command="Open my files">
-                        📁 &nbsp; “Open my files”
-                    </button>
-
-                    <button class="quick-command"
-                        data-command="What's the weather today?">
-                        🌤 &nbsp; “What's the weather today?”
-                    </button>
-
-                    <button class="quick-command"
-                        data-command="Set a reminder for 5 PM">
-                        🕐 &nbsp; “Set a reminder for 5 PM”
-                    </button>
+                    <p>
+                        Powered by your ElevenLabs AI agent.
+                    </p>
 
                 </div>
 
-            </aside>
+                <span class="arrow">›</span>
 
-        </section>
+            </div>
 
-    </main>
 
+            <div class="feature">
 
-    <!-- ================= JAVASCRIPT ================= -->
+                <div class="feature-icon">🛡</div>
 
-    <script>
+                <div>
 
-        /*
-         * =====================================================
-         * AWAI'S AI VOICE ASSISTANT
-         * =====================================================
-         *
-         * UI is completely independent from your AI backend.
-         *
-         * If you already have an API, change the CONFIG values.
-         */
+                    <h4>Secure Connection</h4>
 
-        const CONFIG = {
+                    <p>
+                        Connected directly through ElevenLabs.
+                    </p>
 
-            /*
-             * Example:
-             *
-             * API_URL: "/api/chat"
-             *
-             * Your backend can receive:
-             *
-             * {
-             *     "message": "Hello"
-             * }
-             *
-             * and return:
-             *
-             * {
-             *     "reply": "Hello! How can I help you?"
-             * }
-             */
+                </div>
 
-            API_URL: "/api/chat",
+                <span class="arrow">›</span>
 
-            /*
-             * Set this to true if you already have
-             * a working backend endpoint.
-             *
-             * false = demo mode
-             * true  = real backend
-             */
+            </div>
 
-            USE_API: false
 
-        };
+            <div class="feature">
 
+                <div class="feature-icon">⚙</div>
 
-        /* =====================================================
-           ELEMENTS
-        ===================================================== */
+                <div>
 
-        const micButton = document.getElementById("micButton");
-        const speakButton = document.getElementById("speakButton");
-        const sendButton = document.getElementById("sendButton");
+                    <h4>Customizable</h4>
 
-        const textInput = document.getElementById("textInput");
+                    <p>
+                        Voice, language and agent settings.
+                    </p>
 
-        const messages = document.getElementById("messages");
+                </div>
 
-        const waveform = document.getElementById("waveform");
+                <span class="arrow">›</span>
 
-        const statusTitle = document.getElementById("statusTitle");
-        const statusText = document.getElementById("statusText");
+            </div>
 
-        const connectionText =
-            document.getElementById("connectionText");
 
-        const mobileMenu =
-            document.getElementById("mobileMenu");
+            <div class="quick">
 
-        const sidebar =
-            document.getElementById("sidebar");
+                <h3>✦ Quick Commands</h3>
 
+                <button class="quick-command">
+                    🔍 &nbsp; Search for latest news
+                </button>
 
-        /* =====================================================
-           SPEECH RECOGNITION
-        ===================================================== */
+                <button class="quick-command">
+                    ▶️ &nbsp; Play a song on YouTube
+                </button>
 
-        let recognition = null;
+                <button class="quick-command">
+                    📁 &nbsp; Open my files
+                </button>
 
-        let isListening = false;
+                <button class="quick-command">
+                    🌤 &nbsp; What's the weather today?
+                </button>
 
+                <button class="quick-command">
+                    🕐 &nbsp; Set a reminder for 5 PM
+                </button>
 
-        if (
-            "webkitSpeechRecognition" in window ||
-            "SpeechRecognition" in window
-        ) {
+            </div>
 
-            const SpeechRecognition =
-                window.SpeechRecognition ||
-                window.webkitSpeechRecognition;
+        </aside>
 
-            recognition = new SpeechRecognition();
+    </section>
 
-            recognition.continuous = false;
+</main>
 
-            recognition.interimResults = true;
 
-            recognition.lang = "en-US";
+<!-- ELEVENLABS WIDGET SCRIPT -->
 
+<script
+src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+async
+type="text/javascript">
+</script>
 
-            recognition.onstart = () => {
 
-                isListening = true;
+<script>
 
-                micButton.classList.add("listening");
+const mobileMenu =
+    document.getElementById("mobileMenu");
 
-                waveform.classList.add("active");
+const sidebar =
+    document.getElementById("sidebar");
 
-                statusTitle.textContent = "Listening...";
+mobileMenu.addEventListener("click", () => {
 
-                statusText.textContent =
-                    "Speak now, I'm listening to your voice";
+    sidebar.classList.toggle("open");
 
-                speakButton.innerHTML =
-                    "🔴 &nbsp; Listening...";
+});
 
-            };
 
-
-            recognition.onresult = (event) => {
-
-                let finalText = "";
-
-                for (
-                    let i = event.resultIndex;
-                    i < event.results.length;
-                    i++
-                ) {
-
-                    const transcript =
-                        event.results[i][0].transcript;
-
-                    if (event.results[i].isFinal) {
-
-                        finalText += transcript;
-
-                    }
-
-                }
-
-                if (finalText.trim()) {
-
-                    textInput.value = finalText.trim();
-
-                }
-
-            };
-
-
-            recognition.onerror = (event) => {
-
-                console.error(
-                    "Speech recognition error:",
-                    event.error
-                );
-
-                stopListening();
-
-                statusTitle.textContent = "Voice Error";
-
-                statusText.textContent =
-                    "Please try speaking again.";
-
-            };
-
-
-            recognition.onend = () => {
-
-                stopListening();
-
-                if (textInput.value.trim()) {
-
-                    sendMessage();
-
-                }
-
-            };
-
-        } else {
-
-            statusTitle.textContent =
-                "Voice unavailable";
-
-            statusText.textContent =
-                "Your browser does not support voice recognition.";
-
-            speakButton.disabled = true;
-
-        }
-
-
-        /* =====================================================
-           START / STOP LISTENING
-        ===================================================== */
-
-        function startListening() {
-
-            if (!recognition) {
-
-                alert(
-                    "Voice recognition is not supported by this browser."
-                );
-
-                return;
-            }
-
-            try {
-
-                recognition.start();
-
-            } catch (error) {
-
-                console.log(error);
-
-            }
-
-        }
-
-
-        function stopListening() {
-
-            isListening = false;
-
-            micButton.classList.remove("listening");
-
-            waveform.classList.remove("active");
-
-            speakButton.innerHTML =
-                "🎙 &nbsp; Tap to speak";
-
-            statusTitle.textContent =
-                "Ready";
-
-            statusText.textContent =
-                "Press the microphone and speak";
-
-        }
-
-
-        micButton.addEventListener(
-            "click",
-            () => {
-
-                if (isListening) {
-
-                    recognition.stop();
-
-                } else {
-
-                    startListening();
-
-                }
-
-            }
-        );
-
-
-        speakButton.addEventListener(
-            "click",
-            () => {
-
-                if (isListening) {
-
-                    recognition.stop();
-
-                } else {
-
-                    startListening();
-
-                }
-
-            }
-        );
-
-
-        /* =====================================================
-           SEND MESSAGE
-        ===================================================== */
-
-        sendButton.addEventListener(
-            "click",
-            sendMessage
-        );
-
-
-        textInput.addEventListener(
-            "keydown",
-            (event) => {
-
-                if (event.key === "Enter") {
-
-                    sendMessage();
-
-                }
-
-            }
-        );
-
-
-        async function sendMessage() {
-
-            const message =
-                textInput.value.trim();
-
-            if (!message) {
-
-                return;
-
-            }
-
-
-            addMessage(
-                message,
-                "user"
-            );
-
-
-            textInput.value = "";
-
-
-            statusTitle.textContent =
-                "Thinking...";
-
-            statusText.textContent =
-                "AI is preparing your answer";
-
-
-            /* =============================================
-               REAL API
-            ============================================= */
-
-            if (CONFIG.USE_API) {
-
-                try {
-
-                    const response =
-                        await fetch(
-                            CONFIG.API_URL,
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body: JSON.stringify({
-                                    message: message
-                                })
-                            }
-                        );
-
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            "API request failed"
-                        );
-
-                    }
-
-
-                    const data =
-                        await response.json();
-
-
-                    const reply =
-                        data.reply ||
-                        data.response ||
-                        data.message ||
-                        "I received your message.";
-
-
-                    addMessage(
-                        reply,
-                        "ai"
-                    );
-
-
-                    speak(reply);
-
-
-                } catch (error) {
-
-                    console.error(error);
-
-                    addMessage(
-                        "Sorry, I could not connect to the AI server.",
-                        "ai"
-                    );
-
-                }
-
-            }
-
-            /* =============================================
-               DEMO MODE
-            ============================================= */
-
-            else {
-
-                const reply =
-                    generateDemoResponse(message);
-
-                setTimeout(
-                    () => {
-
-                        addMessage(
-                            reply,
-                            "ai"
-                        );
-
-                        speak(reply);
-
-                    },
-                    500
-                );
-
-            }
-
-
-            statusTitle.textContent =
-                "Ready";
-
-            statusText.textContent =
-                "Press the microphone and speak";
-
-        }
-
-
-        /* =====================================================
-           ADD CHAT MESSAGE
-        ===================================================== */
-
-        function addMessage(
-            text,
-            type
-        ) {
-
-            const message =
-                document.createElement("div");
-
-            message.className =
-                `message ${type === "user" ? "user" : ""}`;
-
-
-            const avatar =
-                document.createElement("div");
-
-            avatar.className =
-                "avatar";
-
-            avatar.textContent =
-                type === "user"
-                    ? "👤"
-                    : "🧠";
-
-
-            const bubble =
-                document.createElement("div");
-
-            bubble.className =
-                "bubble";
-
-
-            bubble.innerHTML =
-                escapeHTML(text) +
-                `
-                    <span class="message-time">
-                        ${type === "user"
-                            ? "Just now ✓"
-                            : "AI Assistant"}
-                    </span>
-                `;
-
-
-            message.appendChild(avatar);
-
-            message.appendChild(bubble);
-
-            messages.appendChild(message);
-
-
-            messages.scrollTop =
-                messages.scrollHeight;
-
-        }
-
-
-        /* =====================================================
-           SECURITY
-        ===================================================== */
-
-        function escapeHTML(text) {
-
-            const div =
-                document.createElement("div");
-
-            div.textContent =
-                text;
-
-            return div.innerHTML;
-
-        }
-
-
-        /* =====================================================
-           DEMO AI
-        ===================================================== */
-
-        function generateDemoResponse(message) {
-
-            const lower =
-                message.toLowerCase();
-
-
-            if (
-                lower.includes("hello") ||
-                lower.includes("hi")
-            ) {
-
-                return "Hello! 👋 I'm Awais AI. How can I help you today?";
-
-            }
-
-
-            if (
-                lower.includes("artificial intelligence") ||
-                lower.includes("what is ai")
-            ) {
-
-                return "Artificial Intelligence is the ability of computer systems to perform tasks that normally require human intelligence, such as learning, reasoning and understanding language.";
-
-            }
-
-
-            if (
-                lower.includes("your name")
-            ) {
-
-                return "My name is Awais AI, your personal voice assistant.";
-
-            }
-
-
-            if (
-                lower.includes("time")
-            ) {
-
-                return "The current time is " +
-                    new Date().toLocaleTimeString();
-
-            }
-
-
-            if (
-                lower.includes("date")
-            ) {
-
-                return "Today is " +
-                    new Date().toLocaleDateString();
-
-            }
-
-
-            return "I understood your request: \"" +
-                message +
-                "\". Connect your AI backend in CONFIG.USE_API to enable real AI responses.";
-
-        }
-
-
-        /* =====================================================
-           TEXT TO SPEECH
-        ===================================================== */
-
-        function speak(text) {
-
-            if (!("speechSynthesis" in window)) {
-
-                return;
-
-            }
-
-
-            window.speechSynthesis.cancel();
-
-
-            const utterance =
-                new SpeechSynthesisUtterance(text);
-
-
-            utterance.lang =
-                "en-US";
-
-            utterance.rate =
-                0.95;
-
-            utterance.pitch =
-                1;
-
-
-            window.speechSynthesis.speak(
-                utterance
-            );
-
-        }
-
-
-        /* =====================================================
-           QUICK COMMANDS
-        ===================================================== */
+document
+.querySelectorAll(".nav-item")
+.forEach(item => {
+
+    item.addEventListener("click", () => {
 
         document
-            .querySelectorAll(".quick-command")
-            .forEach(
-                button => {
+        .querySelectorAll(".nav-item")
+        .forEach(nav => {
 
-                    button.addEventListener(
-                        "click",
-                        () => {
+            nav.classList.remove("active");
 
-                            const command =
-                                button.dataset.command;
+        });
 
-                            textInput.value =
-                                command;
+        item.classList.add("active");
 
-                            sendMessage();
+        if(window.innerWidth <= 800){
 
-                        }
-                    );
-
-                }
-            );
-
-
-        /* =====================================================
-           SIDEBAR NAVIGATION
-        ===================================================== */
-
-        document
-            .querySelectorAll(".nav-item")
-            .forEach(
-                item => {
-
-                    item.addEventListener(
-                        "click",
-                        () => {
-
-                            document
-                                .querySelectorAll(".nav-item")
-                                .forEach(
-                                    nav =>
-                                        nav.classList.remove(
-                                            "active"
-                                        )
-                                );
-
-
-                            item.classList.add(
-                                "active"
-                            );
-
-
-                            const section =
-                                item.dataset.section;
-
-
-                            console.log(
-                                "Selected section:",
-                                section
-                            );
-
-
-                            if (
-                                window.innerWidth <= 800
-                            ) {
-
-                                sidebar.classList.remove(
-                                    "open"
-                                );
-
-                            }
-
-                        }
-                    );
-
-                }
-            );
-
-
-        /* =====================================================
-           MOBILE MENU
-        ===================================================== */
-
-        mobileMenu.addEventListener(
-            "click",
-            () => {
-
-                sidebar.classList.toggle(
-                    "open"
-                );
-
-            }
-        );
-
-
-        /* =====================================================
-           CONNECTION STATUS
-        ===================================================== */
-
-        function updateConnection() {
-
-            if (CONFIG.USE_API) {
-
-                connectionText.textContent =
-                    "AI Connected";
-
-            } else {
-
-                connectionText.textContent =
-                    "Demo Mode";
-
-            }
+            sidebar.classList.remove("open");
 
         }
 
+    });
 
-        updateConnection();
+});
 
 
-        /* =====================================================
-           INITIALIZATION
-        ===================================================== */
+console.log(
+    "Awais AI connected to ElevenLabs."
+);
 
-        console.log(
-            "Awais AI Voice Assistant UI loaded."
-        );
-
-    </script>
+</script>
 
 </body>
 </html>
